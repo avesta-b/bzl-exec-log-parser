@@ -1,13 +1,13 @@
 [package]
 name = "bzl-exec-log-parser"
-version = "0.1.0"
-edition = "2024"
+version = "0.2.0"
+edition = "2021"
 
 [dependencies]
 
 # Protobuf dependencies
-prost = "0.13"
-prost-types = "0.13"
+prost = "0.12"
+prost-types = "0.12"
 
 # CLI argument parsing
 clap = { version = "4.5", features = ["derive"] }
@@ -15,5 +15,8 @@ clap = { version = "4.5", features = ["derive"] }
 # Error handling
 anyhow = "1.0"
 
+# Compression support for compact format
+zstd = "0.13"
+
 [build-dependencies]
-prost-build = "0.13"
+prost-build = "0.12"

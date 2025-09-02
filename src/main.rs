@@ -1,24 +1,27 @@
+// src/main.rs
+
 mod proto;
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use clap::Parser;
 use prost::Message;
-use proto::SpawnExec;
-use proto::exec_log_entry; // Import the nested types
-use proto::ExecLogEntry;
+use proto::exec_log_entry::{self as compact, Type as CompactEntryType};
+use proto::{ExecLogEntry, SpawnExec};
 use std::collections::HashMap;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::Duration;
+use zstd::stream::decode_all;
 
 #[derive(Parser)]
 #[command(name = "bzl-exec-log-analyzer")]
-#[command(about = "Analyzes a Bazel execution log in JSON format to extract performance metrics.")]
+#[command(about = "Analyzes a Bazel execution log (verbose or compact format) to extract performance metrics.")]
 #[command(version)]
 struct Args {
-    /// Path to the Bazel execution log file (in JSON format).
-    /// Can be generated with --execution_log_json_file=<path>
-    #[arg(help = "Path to the Bazel execution log JSON file")]
+    /// Path to the Bazel execution log file.
+    /// Verbose: --execution_log_binary_file
+    /// Compact: --experimental_execution_log_compact_file
+    #[arg(help = "Path to the Bazel execution log file")]
     file: PathBuf,
 
     /// Number of slowest actions to display in the report
@@ -45,39 +48,23 @@ struct MnemonicMetrics {
     total_duration: Duration,
 }
 
+/// An enum to hold different types of compact log entries for reconstruction.
+enum StoredEntry {
+    File(compact::File),
+    Directory(compact::Directory),
+}
+
 fn main() -> Result<()> {
     let args = Args::parse();
 
-    // 1. Read and parse the file
-    let content = fs::read(&args.file)?;
-    let spawns: Vec<SpawnExec> = if args.file.extension() == Some(std::ffi::OsStr::new("json")) {
-        // Try to parse as JSON (would need serde support)
-        return Err(anyhow::anyhow!("JSON format not yet supported in this version. Use protobuf binary format."));
-    } else {
-        // Parse as protobuf binary format
-        let mut decoded_spawns = Vec::new();
-        let mut cursor = content.as_slice();
-        
-        while !cursor.is_empty() {
-            match SpawnExec::decode_length_delimited(&mut cursor) {
-                Ok(spawn) => decoded_spawns.push(spawn),
-                Err(e) => {
-                    eprintln!(
-                        "Failed to parse protobuf message: {}. The log file might be corrupt or in the wrong format (e.g., compact instead of verbose).",
-                        e
-                    );
-                    break;
-                }
-            }
-        }
-        println!("Parsed {} spawn entries from the log.", decoded_spawns.len());
-        decoded_spawns
-    };
-    
+    let spawns = parse_log_file(&args.file)?;
+
     if spawns.is_empty() {
-        println!("Execution log is empty. No metrics to report.");
+        println!("Execution log is empty or contains no spawn actions. No metrics to report.");
         return Ok(());
     }
+    println!("Successfully parsed and reconstructed {} spawn entries from the log.", spawns.len());
+
 
     // --- Print Main Report ---
     print_main_report(&spawns, &args);
@@ -90,8 +77,126 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+/// Parses the log file, auto-detecting the format (compact or verbose).
+fn parse_log_file(path: &Path) -> Result<Vec<SpawnExec>> {
+    let raw_bytes = fs::read(path)?;
+
+    // 1. Try parsing as a zstd-compressed compact log first.
+    if let Ok(decompressed) = decode_all(raw_bytes.as_slice()) {
+        if let Ok(spawns) = parse_compact_log(&decompressed) {
+            println!("Detected zstd-compressed compact log format.");
+            return Ok(spawns);
+        }
+    }
+
+    // 2. Fallback to parsing as an uncompressed verbose log.
+    println!("Could not parse as compact log. Falling back to verbose log format.");
+    parse_verbose_log(&raw_bytes)
+}
+
+/// Parses the verbose execution log format (length-delimited SpawnExec protos).
+fn parse_verbose_log(content: &[u8]) -> Result<Vec<SpawnExec>> {
+    let mut decoded_spawns = Vec::new();
+    let mut cursor = content;
+
+    while !cursor.is_empty() {
+        match SpawnExec::decode_length_delimited(&mut cursor) {
+            Ok(spawn) => decoded_spawns.push(spawn),
+            Err(e) => {
+                return Err(anyhow!("Failed to parse verbose protobuf message: {}. The log file might be corrupt or in the wrong format.", e));
+            }
+        }
+    }
+    Ok(decoded_spawns)
+}
+
+/// Parses the compact execution log format and reconstructs SpawnExec messages.
+fn parse_compact_log(content: &[u8]) -> Result<Vec<SpawnExec>> {
+    let mut cursor = content;
+    let mut stored_entries: HashMap<u32, StoredEntry> = HashMap::new();
+    let mut reconstructed_spawns = Vec::new();
+
+    while !cursor.is_empty() {
+        let entry = ExecLogEntry::decode_length_delimited(&mut cursor)?;
+        let id = entry.id;
+
+        match entry.r#type {
+            Some(CompactEntryType::Spawn(s)) => {
+                let spawn_exec = reconstruct_spawn_exec(s, &stored_entries);
+                reconstructed_spawns.push(spawn_exec);
+            }
+            Some(CompactEntryType::File(f)) if id != 0 => {
+                stored_entries.insert(id, StoredEntry::File(f));
+            }
+            Some(CompactEntryType::Directory(d)) if id != 0 => {
+                stored_entries.insert(id, StoredEntry::Directory(d));
+            }
+            // Ignore other entry types for now as they are not needed for the analysis.
+            _ => {}
+        }
+    }
+    Ok(reconstructed_spawns)
+}
+
+/// Converts a compact `Spawn` entry into a verbose `SpawnExec` using stored file/dir info.
+fn reconstruct_spawn_exec(
+    spawn: compact::Spawn,
+    stored_entries: &HashMap<u32, StoredEntry>,
+) -> SpawnExec {
+    let mut actual_outputs = Vec::new();
+    for output in spawn.outputs {
+        if let Some(compact::output::Type::OutputId(id)) = output.r#type {
+            if let Some(entry) = stored_entries.get(&id) {
+                match entry {
+                    StoredEntry::File(f) => {
+                        actual_outputs.push(proto::File {
+                            path: f.path.clone(),
+                            digest: f.digest.clone(),
+                            symlink_target_path: String::new(),
+                            is_tool: false,
+                        });
+                    }
+                    StoredEntry::Directory(d) => {
+                        // The verbose format represents directories as a single File entry with a path.
+                        // We will omit the digest as it's not directly available/needed for metrics.
+                        actual_outputs.push(proto::File {
+                            path: d.path.clone(),
+                            digest: None,
+                            symlink_target_path: String::new(),
+                            is_tool: false,
+                        });
+                    }
+                }
+            }
+        }
+    }
+
+    SpawnExec {
+        command_args: spawn.args,
+        environment_variables: spawn.env_vars,
+        platform: spawn.platform,
+        inputs: vec![], // Not reconstructed as it's not used in analysis
+        listed_outputs: vec![], // Not reconstructed as it's not used in analysis
+        remotable: spawn.remotable,
+        cacheable: spawn.cacheable,
+        timeout_millis: spawn.timeout_millis,
+        mnemonic: spawn.mnemonic,
+        actual_outputs,
+        runner: spawn.runner,
+        cache_hit: spawn.cache_hit,
+        status: spawn.status,
+        exit_code: spawn.exit_code,
+        remote_cacheable: spawn.remote_cacheable,
+        target_label: spawn.target_label,
+        digest: spawn.digest,
+        metrics: spawn.metrics,
+    }
+}
+
+// --- ANALYSIS AND REPORTING FUNCTIONS (UNCHANGED) ---
+
 fn print_main_report(spawns: &[SpawnExec], args: &Args) {
-    // 2. Analyze the spawns
+    // ... (This function is identical to the original) ...
     let total_actions = spawns.len();
     let cache_hits = spawns.iter().filter(|s| s.cache_hit).count();
 
@@ -103,7 +208,7 @@ fn print_main_report(spawns: &[SpawnExec], args: &Args) {
             .map(to_std_duration)
             .unwrap_or_default()
     });
-    slowest_actions.reverse(); // Now from slowest to fastest
+    slowest_actions.reverse();
 
     let mut mnemonic_metrics: HashMap<String, MnemonicMetrics> = HashMap::new();
     for spawn in spawns {
@@ -119,18 +224,14 @@ fn print_main_report(spawns: &[SpawnExec], args: &Args) {
         }
     }
 
-    // 3. Print the report
     println!("========================================");
     println!(" Bazel Execution Log Analysis Report");
     println!("========================================");
     println!("Log file: {}\n", args.file.display());
-
     println!("--- Overall Summary ---");
     println!("Total Actions: {}", total_actions);
     println!("Cache Hits: {} ({:.2}%)", cache_hits, (cache_hits as f64 / total_actions as f64) * 100.0);
     println!();
-
-
     println!("--- Top {} Slowest Actions ---", args.top_n);
     println!("{:<10} | {:<25} | {}", "Time", "Mnemonic", "Target");
     println!("---------------------------------------------------------------------------------");
@@ -148,23 +249,18 @@ fn print_main_report(spawns: &[SpawnExec], args: &Args) {
         );
     }
     println!();
-
-
     println!("--- Analysis by Mnemonic ---");
     println!("{:<25} | {:>10} | {:>10} | {:>10} | {:>10}", "Mnemonic", "Count", "Cache Hits", "Total Time", "Avg Time");
     println!("---------------------------------------------------------------------------------");
-
     let mut sorted_mnemonics: Vec<_> = mnemonic_metrics.iter().collect();
     sorted_mnemonics.sort_by_key(|(_, metrics)| metrics.total_duration);
     sorted_mnemonics.reverse();
-
     for (mnemonic, metrics) in sorted_mnemonics {
         let avg_time = if metrics.count > 0 {
             metrics.total_duration.as_secs_f64() / metrics.count as f64
         } else {
             0.0
         };
-
         println!(
             "{:<25} | {:>10} | {:>10.1}% | {:>10.2}s | {:>10.3}s",
             mnemonic,
@@ -178,23 +274,19 @@ fn print_main_report(spawns: &[SpawnExec], args: &Args) {
 }
 
 fn print_cache_performance_report(spawns: &[SpawnExec]) {
+    // ... (This function is identical to the original) ...
     let mut total_bytes_downloaded: i64 = 0;
     let mut total_fetch_time = Duration::ZERO;
     let mut remote_cache_hit_count = 0;
 
     for spawn in spawns {
-        // Filter for spawns that were served by the remote cache
         if spawn.runner == "remote cache hit" {
             remote_cache_hit_count += 1;
-
-            // Sum the size of all output files for this spawn
             let bytes_for_spawn: i64 = spawn.actual_outputs.iter()
                 .filter_map(|file| file.digest.as_ref())
                 .map(|digest| digest.size_bytes)
                 .sum();
             total_bytes_downloaded += bytes_for_spawn;
-
-            // Add the time spent fetching remote outputs
             if let Some(fetch_duration) = spawn.metrics.as_ref().and_then(|m| m.fetch_time.as_ref()) {
                 total_fetch_time += to_std_duration(fetch_duration);
             }
@@ -202,20 +294,16 @@ fn print_cache_performance_report(spawns: &[SpawnExec]) {
     }
 
     println!("--- Remote Cache Performance ---");
-
     if remote_cache_hit_count == 0 {
         println!("No remote cache hits found in the log.");
         println!();
         return;
     }
-
     let total_mb_downloaded = total_bytes_downloaded as f64 / 1_000_000.0;
     let total_fetch_seconds = total_fetch_time.as_secs_f64();
-
     println!("Remote Cache Hits Count: {}", remote_cache_hit_count);
     println!("Total Data Downloaded: {:.2} MB", total_mb_downloaded);
     println!("Total Time Fetching from Cache: {:.2}s", total_fetch_seconds);
-
     if total_fetch_seconds > 0.001 {
         let download_rate_mbps = total_mb_downloaded / total_fetch_seconds;
         println!("Average Download Rate: {:.2} MB/s", download_rate_mbps);
