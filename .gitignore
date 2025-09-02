@@ -1,2 +1,6 @@
 target/
 target/*
+GEMINI.md
+CLAUDE.md
+exec_log*
+combined_code.txt
