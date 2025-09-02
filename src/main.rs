@@ -4,6 +4,8 @@ use anyhow::Result;
 use clap::Parser;
 use prost::Message;
 use proto::SpawnExec;
+use proto::exec_log_entry; // Import the nested types
+use proto::ExecLogEntry;
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
@@ -59,9 +61,16 @@ fn main() -> Result<()> {
         while !cursor.is_empty() {
             match SpawnExec::decode_length_delimited(&mut cursor) {
                 Ok(spawn) => decoded_spawns.push(spawn),
-                Err(_) => break, // End of valid data
+                Err(e) => {
+                    eprintln!(
+                        "Failed to parse protobuf message: {}. The log file might be corrupt or in the wrong format (e.g., compact instead of verbose).",
+                        e
+                    );
+                    break;
+                }
             }
         }
+        println!("Parsed {} spawn entries from the log.", decoded_spawns.len());
         decoded_spawns
     };
     
