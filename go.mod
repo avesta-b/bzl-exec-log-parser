@@ -1,10 +1,10 @@
-module bzl-exec-log-parser
+module github.com/avesta-b/bzl-exec-log-parser
 
-go 1.21
+go 1.23
 
 require (
 	github.com/spf13/cobra v1.8.0
-	google.golang.org/protobuf v1.34.2
+	google.golang.org/protobuf v1.36.8
 )
 
 require (

@@ -16,7 +16,7 @@
 // versions:
 // 	protoc-gen-go v1.36.8
 // 	protoc        v5.29.3
-// source: spawn.proto
+// source: spawn/spawn.proto
 
 package spawn
 
@@ -52,7 +52,7 @@ type Digest struct {
 
 func (x *Digest) Reset() {
 	*x = Digest{}
-	mi := &file_spawn_proto_msgTypes[0]
+	mi := &file_spawn_spawn_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -64,7 +64,7 @@ func (x *Digest) String() string {
 func (*Digest) ProtoMessage() {}
 
 func (x *Digest) ProtoReflect() protoreflect.Message {
-	mi := &file_spawn_proto_msgTypes[0]
+	mi := &file_spawn_spawn_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -77,7 +77,7 @@ func (x *Digest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Digest.ProtoReflect.Descriptor instead.
 func (*Digest) Descriptor() ([]byte, []int) {
-	return file_spawn_proto_rawDescGZIP(), []int{0}
+	return file_spawn_spawn_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *Digest) GetHash() string {
@@ -120,7 +120,7 @@ type File struct {
 
 func (x *File) Reset() {
 	*x = File{}
-	mi := &file_spawn_proto_msgTypes[1]
+	mi := &file_spawn_spawn_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -132,7 +132,7 @@ func (x *File) String() string {
 func (*File) ProtoMessage() {}
 
 func (x *File) ProtoReflect() protoreflect.Message {
-	mi := &file_spawn_proto_msgTypes[1]
+	mi := &file_spawn_spawn_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -145,7 +145,7 @@ func (x *File) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use File.ProtoReflect.Descriptor instead.
 func (*File) Descriptor() ([]byte, []int) {
-	return file_spawn_proto_rawDescGZIP(), []int{1}
+	return file_spawn_spawn_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *File) GetPath() string {
@@ -187,7 +187,7 @@ type EnvironmentVariable struct {
 
 func (x *EnvironmentVariable) Reset() {
 	*x = EnvironmentVariable{}
-	mi := &file_spawn_proto_msgTypes[2]
+	mi := &file_spawn_spawn_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -199,7 +199,7 @@ func (x *EnvironmentVariable) String() string {
 func (*EnvironmentVariable) ProtoMessage() {}
 
 func (x *EnvironmentVariable) ProtoReflect() protoreflect.Message {
-	mi := &file_spawn_proto_msgTypes[2]
+	mi := &file_spawn_spawn_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -212,7 +212,7 @@ func (x *EnvironmentVariable) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EnvironmentVariable.ProtoReflect.Descriptor instead.
 func (*EnvironmentVariable) Descriptor() ([]byte, []int) {
-	return file_spawn_proto_rawDescGZIP(), []int{2}
+	return file_spawn_spawn_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *EnvironmentVariable) GetName() string {
@@ -240,7 +240,7 @@ type Platform struct {
 
 func (x *Platform) Reset() {
 	*x = Platform{}
-	mi := &file_spawn_proto_msgTypes[3]
+	mi := &file_spawn_spawn_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -252,7 +252,7 @@ func (x *Platform) String() string {
 func (*Platform) ProtoMessage() {}
 
 func (x *Platform) ProtoReflect() protoreflect.Message {
-	mi := &file_spawn_proto_msgTypes[3]
+	mi := &file_spawn_spawn_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -265,7 +265,7 @@ func (x *Platform) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Platform.ProtoReflect.Descriptor instead.
 func (*Platform) Descriptor() ([]byte, []int) {
-	return file_spawn_proto_rawDescGZIP(), []int{3}
+	return file_spawn_spawn_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *Platform) GetProperties() []*Platform_Property {
@@ -324,7 +324,7 @@ type SpawnMetrics struct {
 
 func (x *SpawnMetrics) Reset() {
 	*x = SpawnMetrics{}
-	mi := &file_spawn_proto_msgTypes[4]
+	mi := &file_spawn_spawn_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -336,7 +336,7 @@ func (x *SpawnMetrics) String() string {
 func (*SpawnMetrics) ProtoMessage() {}
 
 func (x *SpawnMetrics) ProtoReflect() protoreflect.Message {
-	mi := &file_spawn_proto_msgTypes[4]
+	mi := &file_spawn_spawn_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -349,7 +349,7 @@ func (x *SpawnMetrics) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SpawnMetrics.ProtoReflect.Descriptor instead.
 func (*SpawnMetrics) Descriptor() ([]byte, []int) {
-	return file_spawn_proto_rawDescGZIP(), []int{4}
+	return file_spawn_spawn_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *SpawnMetrics) GetTotalTime() *durationpb.Duration {
@@ -560,7 +560,7 @@ type SpawnExec struct {
 
 func (x *SpawnExec) Reset() {
 	*x = SpawnExec{}
-	mi := &file_spawn_proto_msgTypes[5]
+	mi := &file_spawn_spawn_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -572,7 +572,7 @@ func (x *SpawnExec) String() string {
 func (*SpawnExec) ProtoMessage() {}
 
 func (x *SpawnExec) ProtoReflect() protoreflect.Message {
-	mi := &file_spawn_proto_msgTypes[5]
+	mi := &file_spawn_spawn_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -585,7 +585,7 @@ func (x *SpawnExec) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SpawnExec.ProtoReflect.Descriptor instead.
 func (*SpawnExec) Descriptor() ([]byte, []int) {
-	return file_spawn_proto_rawDescGZIP(), []int{5}
+	return file_spawn_spawn_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *SpawnExec) GetCommandArgs() []string {
@@ -754,7 +754,7 @@ type ExecLogEntry struct {
 
 func (x *ExecLogEntry) Reset() {
 	*x = ExecLogEntry{}
-	mi := &file_spawn_proto_msgTypes[6]
+	mi := &file_spawn_spawn_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -766,7 +766,7 @@ func (x *ExecLogEntry) String() string {
 func (*ExecLogEntry) ProtoMessage() {}
 
 func (x *ExecLogEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_spawn_proto_msgTypes[6]
+	mi := &file_spawn_spawn_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -779,7 +779,7 @@ func (x *ExecLogEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExecLogEntry.ProtoReflect.Descriptor instead.
 func (*ExecLogEntry) Descriptor() ([]byte, []int) {
-	return file_spawn_proto_rawDescGZIP(), []int{6}
+	return file_spawn_spawn_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *ExecLogEntry) GetId() uint32 {
@@ -945,7 +945,7 @@ type Platform_Property struct {
 
 func (x *Platform_Property) Reset() {
 	*x = Platform_Property{}
-	mi := &file_spawn_proto_msgTypes[7]
+	mi := &file_spawn_spawn_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -957,7 +957,7 @@ func (x *Platform_Property) String() string {
 func (*Platform_Property) ProtoMessage() {}
 
 func (x *Platform_Property) ProtoReflect() protoreflect.Message {
-	mi := &file_spawn_proto_msgTypes[7]
+	mi := &file_spawn_spawn_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -970,7 +970,7 @@ func (x *Platform_Property) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Platform_Property.ProtoReflect.Descriptor instead.
 func (*Platform_Property) Descriptor() ([]byte, []int) {
-	return file_spawn_proto_rawDescGZIP(), []int{3, 0}
+	return file_spawn_spawn_proto_rawDescGZIP(), []int{3, 0}
 }
 
 func (x *Platform_Property) GetName() string {
@@ -1009,7 +1009,7 @@ type ExecLogEntry_Invocation struct {
 
 func (x *ExecLogEntry_Invocation) Reset() {
 	*x = ExecLogEntry_Invocation{}
-	mi := &file_spawn_proto_msgTypes[8]
+	mi := &file_spawn_spawn_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1021,7 +1021,7 @@ func (x *ExecLogEntry_Invocation) String() string {
 func (*ExecLogEntry_Invocation) ProtoMessage() {}
 
 func (x *ExecLogEntry_Invocation) ProtoReflect() protoreflect.Message {
-	mi := &file_spawn_proto_msgTypes[8]
+	mi := &file_spawn_spawn_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1034,7 +1034,7 @@ func (x *ExecLogEntry_Invocation) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExecLogEntry_Invocation.ProtoReflect.Descriptor instead.
 func (*ExecLogEntry_Invocation) Descriptor() ([]byte, []int) {
-	return file_spawn_proto_rawDescGZIP(), []int{6, 0}
+	return file_spawn_spawn_proto_rawDescGZIP(), []int{6, 0}
 }
 
 func (x *ExecLogEntry_Invocation) GetHashFunctionName() string {
@@ -1080,7 +1080,7 @@ type ExecLogEntry_File struct {
 
 func (x *ExecLogEntry_File) Reset() {
 	*x = ExecLogEntry_File{}
-	mi := &file_spawn_proto_msgTypes[9]
+	mi := &file_spawn_spawn_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1092,7 +1092,7 @@ func (x *ExecLogEntry_File) String() string {
 func (*ExecLogEntry_File) ProtoMessage() {}
 
 func (x *ExecLogEntry_File) ProtoReflect() protoreflect.Message {
-	mi := &file_spawn_proto_msgTypes[9]
+	mi := &file_spawn_spawn_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1105,7 +1105,7 @@ func (x *ExecLogEntry_File) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExecLogEntry_File.ProtoReflect.Descriptor instead.
 func (*ExecLogEntry_File) Descriptor() ([]byte, []int) {
-	return file_spawn_proto_rawDescGZIP(), []int{6, 1}
+	return file_spawn_spawn_proto_rawDescGZIP(), []int{6, 1}
 }
 
 func (x *ExecLogEntry_File) GetPath() string {
@@ -1136,7 +1136,7 @@ type ExecLogEntry_Directory struct {
 
 func (x *ExecLogEntry_Directory) Reset() {
 	*x = ExecLogEntry_Directory{}
-	mi := &file_spawn_proto_msgTypes[10]
+	mi := &file_spawn_spawn_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1148,7 +1148,7 @@ func (x *ExecLogEntry_Directory) String() string {
 func (*ExecLogEntry_Directory) ProtoMessage() {}
 
 func (x *ExecLogEntry_Directory) ProtoReflect() protoreflect.Message {
-	mi := &file_spawn_proto_msgTypes[10]
+	mi := &file_spawn_spawn_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1161,7 +1161,7 @@ func (x *ExecLogEntry_Directory) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExecLogEntry_Directory.ProtoReflect.Descriptor instead.
 func (*ExecLogEntry_Directory) Descriptor() ([]byte, []int) {
-	return file_spawn_proto_rawDescGZIP(), []int{6, 2}
+	return file_spawn_spawn_proto_rawDescGZIP(), []int{6, 2}
 }
 
 func (x *ExecLogEntry_Directory) GetPath() string {
@@ -1191,7 +1191,7 @@ type ExecLogEntry_UnresolvedSymlink struct {
 
 func (x *ExecLogEntry_UnresolvedSymlink) Reset() {
 	*x = ExecLogEntry_UnresolvedSymlink{}
-	mi := &file_spawn_proto_msgTypes[11]
+	mi := &file_spawn_spawn_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1203,7 +1203,7 @@ func (x *ExecLogEntry_UnresolvedSymlink) String() string {
 func (*ExecLogEntry_UnresolvedSymlink) ProtoMessage() {}
 
 func (x *ExecLogEntry_UnresolvedSymlink) ProtoReflect() protoreflect.Message {
-	mi := &file_spawn_proto_msgTypes[11]
+	mi := &file_spawn_spawn_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1216,7 +1216,7 @@ func (x *ExecLogEntry_UnresolvedSymlink) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExecLogEntry_UnresolvedSymlink.ProtoReflect.Descriptor instead.
 func (*ExecLogEntry_UnresolvedSymlink) Descriptor() ([]byte, []int) {
-	return file_spawn_proto_rawDescGZIP(), []int{6, 3}
+	return file_spawn_spawn_proto_rawDescGZIP(), []int{6, 3}
 }
 
 func (x *ExecLogEntry_UnresolvedSymlink) GetPath() string {
@@ -1253,7 +1253,7 @@ type ExecLogEntry_InputSet struct {
 
 func (x *ExecLogEntry_InputSet) Reset() {
 	*x = ExecLogEntry_InputSet{}
-	mi := &file_spawn_proto_msgTypes[12]
+	mi := &file_spawn_spawn_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1265,7 +1265,7 @@ func (x *ExecLogEntry_InputSet) String() string {
 func (*ExecLogEntry_InputSet) ProtoMessage() {}
 
 func (x *ExecLogEntry_InputSet) ProtoReflect() protoreflect.Message {
-	mi := &file_spawn_proto_msgTypes[12]
+	mi := &file_spawn_spawn_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1278,7 +1278,7 @@ func (x *ExecLogEntry_InputSet) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExecLogEntry_InputSet.ProtoReflect.Descriptor instead.
 func (*ExecLogEntry_InputSet) Descriptor() ([]byte, []int) {
-	return file_spawn_proto_rawDescGZIP(), []int{6, 4}
+	return file_spawn_spawn_proto_rawDescGZIP(), []int{6, 4}
 }
 
 func (x *ExecLogEntry_InputSet) GetInputIds() []uint32 {
@@ -1315,7 +1315,7 @@ type ExecLogEntry_SymlinkEntrySet struct {
 
 func (x *ExecLogEntry_SymlinkEntrySet) Reset() {
 	*x = ExecLogEntry_SymlinkEntrySet{}
-	mi := &file_spawn_proto_msgTypes[13]
+	mi := &file_spawn_spawn_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1327,7 +1327,7 @@ func (x *ExecLogEntry_SymlinkEntrySet) String() string {
 func (*ExecLogEntry_SymlinkEntrySet) ProtoMessage() {}
 
 func (x *ExecLogEntry_SymlinkEntrySet) ProtoReflect() protoreflect.Message {
-	mi := &file_spawn_proto_msgTypes[13]
+	mi := &file_spawn_spawn_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1340,7 +1340,7 @@ func (x *ExecLogEntry_SymlinkEntrySet) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExecLogEntry_SymlinkEntrySet.ProtoReflect.Descriptor instead.
 func (*ExecLogEntry_SymlinkEntrySet) Descriptor() ([]byte, []int) {
-	return file_spawn_proto_rawDescGZIP(), []int{6, 5}
+	return file_spawn_spawn_proto_rawDescGZIP(), []int{6, 5}
 }
 
 func (x *ExecLogEntry_SymlinkEntrySet) GetDirectEntries() map[string]uint32 {
@@ -1409,7 +1409,7 @@ type ExecLogEntry_RunfilesTree struct {
 
 func (x *ExecLogEntry_RunfilesTree) Reset() {
 	*x = ExecLogEntry_RunfilesTree{}
-	mi := &file_spawn_proto_msgTypes[14]
+	mi := &file_spawn_spawn_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1421,7 +1421,7 @@ func (x *ExecLogEntry_RunfilesTree) String() string {
 func (*ExecLogEntry_RunfilesTree) ProtoMessage() {}
 
 func (x *ExecLogEntry_RunfilesTree) ProtoReflect() protoreflect.Message {
-	mi := &file_spawn_proto_msgTypes[14]
+	mi := &file_spawn_spawn_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1434,7 +1434,7 @@ func (x *ExecLogEntry_RunfilesTree) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExecLogEntry_RunfilesTree.ProtoReflect.Descriptor instead.
 func (*ExecLogEntry_RunfilesTree) Descriptor() ([]byte, []int) {
-	return file_spawn_proto_rawDescGZIP(), []int{6, 6}
+	return file_spawn_spawn_proto_rawDescGZIP(), []int{6, 6}
 }
 
 func (x *ExecLogEntry_RunfilesTree) GetPath() string {
@@ -1493,7 +1493,7 @@ type ExecLogEntry_Output struct {
 
 func (x *ExecLogEntry_Output) Reset() {
 	*x = ExecLogEntry_Output{}
-	mi := &file_spawn_proto_msgTypes[15]
+	mi := &file_spawn_spawn_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1505,7 +1505,7 @@ func (x *ExecLogEntry_Output) String() string {
 func (*ExecLogEntry_Output) ProtoMessage() {}
 
 func (x *ExecLogEntry_Output) ProtoReflect() protoreflect.Message {
-	mi := &file_spawn_proto_msgTypes[15]
+	mi := &file_spawn_spawn_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1518,7 +1518,7 @@ func (x *ExecLogEntry_Output) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExecLogEntry_Output.ProtoReflect.Descriptor instead.
 func (*ExecLogEntry_Output) Descriptor() ([]byte, []int) {
-	return file_spawn_proto_rawDescGZIP(), []int{6, 7}
+	return file_spawn_spawn_proto_rawDescGZIP(), []int{6, 7}
 }
 
 func (x *ExecLogEntry_Output) GetType() isExecLogEntry_Output_Type {
@@ -1614,7 +1614,7 @@ type ExecLogEntry_Spawn struct {
 
 func (x *ExecLogEntry_Spawn) Reset() {
 	*x = ExecLogEntry_Spawn{}
-	mi := &file_spawn_proto_msgTypes[16]
+	mi := &file_spawn_spawn_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1626,7 +1626,7 @@ func (x *ExecLogEntry_Spawn) String() string {
 func (*ExecLogEntry_Spawn) ProtoMessage() {}
 
 func (x *ExecLogEntry_Spawn) ProtoReflect() protoreflect.Message {
-	mi := &file_spawn_proto_msgTypes[16]
+	mi := &file_spawn_spawn_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1639,7 +1639,7 @@ func (x *ExecLogEntry_Spawn) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExecLogEntry_Spawn.ProtoReflect.Descriptor instead.
 func (*ExecLogEntry_Spawn) Descriptor() ([]byte, []int) {
-	return file_spawn_proto_rawDescGZIP(), []int{6, 8}
+	return file_spawn_spawn_proto_rawDescGZIP(), []int{6, 8}
 }
 
 func (x *ExecLogEntry_Spawn) GetArgs() []string {
@@ -1786,7 +1786,7 @@ type ExecLogEntry_SymlinkAction struct {
 
 func (x *ExecLogEntry_SymlinkAction) Reset() {
 	*x = ExecLogEntry_SymlinkAction{}
-	mi := &file_spawn_proto_msgTypes[17]
+	mi := &file_spawn_spawn_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1798,7 +1798,7 @@ func (x *ExecLogEntry_SymlinkAction) String() string {
 func (*ExecLogEntry_SymlinkAction) ProtoMessage() {}
 
 func (x *ExecLogEntry_SymlinkAction) ProtoReflect() protoreflect.Message {
-	mi := &file_spawn_proto_msgTypes[17]
+	mi := &file_spawn_spawn_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1811,7 +1811,7 @@ func (x *ExecLogEntry_SymlinkAction) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExecLogEntry_SymlinkAction.ProtoReflect.Descriptor instead.
 func (*ExecLogEntry_SymlinkAction) Descriptor() ([]byte, []int) {
-	return file_spawn_proto_rawDescGZIP(), []int{6, 9}
+	return file_spawn_spawn_proto_rawDescGZIP(), []int{6, 9}
 }
 
 func (x *ExecLogEntry_SymlinkAction) GetInputPath() string {
@@ -1842,11 +1842,11 @@ func (x *ExecLogEntry_SymlinkAction) GetMnemonic() string {
 	return ""
 }
 
-var File_spawn_proto protoreflect.FileDescriptor
+var File_spawn_spawn_proto protoreflect.FileDescriptor
 
-const file_spawn_proto_rawDesc = "" +
+const file_spawn_spawn_proto_rawDesc = "" +
 	"\n" +
-	"\vspawn.proto\x12\ftools.protos\x1a\x1egoogle/protobuf/duration.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"i\n" +
+	"\x11spawn/spawn.proto\x12\ftools.protos\x1a\x1egoogle/protobuf/duration.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"i\n" +
 	"\x06Digest\x12\x12\n" +
 	"\x04hash\x18\x01 \x01(\tR\x04hash\x12\x1d\n" +
 	"\n" +
@@ -2006,19 +2006,19 @@ const file_spawn_proto_rawDesc = "" +
 	"\"com.google.devtools.build.lib.execB\x06ProtosZ7github.com/avesta-b/bzl-exec-log-parser/pkg/proto/spawnb\x06proto3"
 
 var (
-	file_spawn_proto_rawDescOnce sync.Once
-	file_spawn_proto_rawDescData []byte
+	file_spawn_spawn_proto_rawDescOnce sync.Once
+	file_spawn_spawn_proto_rawDescData []byte
 )
 
-func file_spawn_proto_rawDescGZIP() []byte {
-	file_spawn_proto_rawDescOnce.Do(func() {
-		file_spawn_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_spawn_proto_rawDesc), len(file_spawn_proto_rawDesc)))
+func file_spawn_spawn_proto_rawDescGZIP() []byte {
+	file_spawn_spawn_proto_rawDescOnce.Do(func() {
+		file_spawn_spawn_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_spawn_spawn_proto_rawDesc), len(file_spawn_spawn_proto_rawDesc)))
 	})
-	return file_spawn_proto_rawDescData
+	return file_spawn_spawn_proto_rawDescData
 }
 
-var file_spawn_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
-var file_spawn_proto_goTypes = []any{
+var file_spawn_spawn_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
+var file_spawn_spawn_proto_goTypes = []any{
 	(*Digest)(nil),                         // 0: tools.protos.Digest
 	(*File)(nil),                           // 1: tools.protos.File
 	(*EnvironmentVariable)(nil),            // 2: tools.protos.EnvironmentVariable
@@ -2041,7 +2041,7 @@ var file_spawn_proto_goTypes = []any{
 	(*durationpb.Duration)(nil),            // 19: google.protobuf.Duration
 	(*timestamppb.Timestamp)(nil),          // 20: google.protobuf.Timestamp
 }
-var file_spawn_proto_depIdxs = []int32{
+var file_spawn_spawn_proto_depIdxs = []int32{
 	0,  // 0: tools.protos.File.digest:type_name -> tools.protos.Digest
 	7,  // 1: tools.protos.Platform.properties:type_name -> tools.protos.Platform.Property
 	19, // 2: tools.protos.SpawnMetrics.total_time:type_name -> google.protobuf.Duration
@@ -2087,12 +2087,12 @@ var file_spawn_proto_depIdxs = []int32{
 	0,  // [0:38] is the sub-list for field type_name
 }
 
-func init() { file_spawn_proto_init() }
-func file_spawn_proto_init() {
-	if File_spawn_proto != nil {
+func init() { file_spawn_spawn_proto_init() }
+func file_spawn_spawn_proto_init() {
+	if File_spawn_spawn_proto != nil {
 		return
 	}
-	file_spawn_proto_msgTypes[6].OneofWrappers = []any{
+	file_spawn_spawn_proto_msgTypes[6].OneofWrappers = []any{
 		(*ExecLogEntry_Invocation_)(nil),
 		(*ExecLogEntry_File_)(nil),
 		(*ExecLogEntry_Directory_)(nil),
@@ -2103,7 +2103,7 @@ func file_spawn_proto_init() {
 		(*ExecLogEntry_SymlinkEntrySet_)(nil),
 		(*ExecLogEntry_RunfilesTree_)(nil),
 	}
-	file_spawn_proto_msgTypes[15].OneofWrappers = []any{
+	file_spawn_spawn_proto_msgTypes[15].OneofWrappers = []any{
 		(*ExecLogEntry_Output_OutputId)(nil),
 		(*ExecLogEntry_Output_InvalidOutputPath)(nil),
 	}
@@ -2111,17 +2111,17 @@ func file_spawn_proto_init() {
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_spawn_proto_rawDesc), len(file_spawn_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_spawn_spawn_proto_rawDesc), len(file_spawn_spawn_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   19,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_spawn_proto_goTypes,
-		DependencyIndexes: file_spawn_proto_depIdxs,
-		MessageInfos:      file_spawn_proto_msgTypes,
+		GoTypes:           file_spawn_spawn_proto_goTypes,
+		DependencyIndexes: file_spawn_spawn_proto_depIdxs,
+		MessageInfos:      file_spawn_spawn_proto_msgTypes,
 	}.Build()
-	File_spawn_proto = out.File
-	file_spawn_proto_goTypes = nil
-	file_spawn_proto_depIdxs = nil
+	File_spawn_spawn_proto = out.File
+	file_spawn_spawn_proto_goTypes = nil
+	file_spawn_spawn_proto_depIdxs = nil
 }

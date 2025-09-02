@@ -76,14 +76,7 @@ print_status "Generating Go bindings for protobuf files..."
 
 # Array of proto files with their subdirectories
 PROTO_CONFIGS=(
-    "action_cache:action_cache/action_cache.proto"
-    "build_event_stream:build_event_stream/build_event_stream.proto"  
-    "command_line:command_line/command_line.proto"
-    "failure_details:failure_details/failure_details.proto"
-    "invocation_policy:invocation_policy/invocation_policy.proto"
-    "option_filters:option_filters/option_filters.proto"
-    "package_load_metrics:package_load_metrics/package_load_metrics.proto"
-    "strategy_policy:strategy_policy/strategy_policy.proto"
+    "spawn:spawn/spawn.proto"
 )
 
 # Create base output directory for generated Go files
@@ -98,7 +91,7 @@ for config in "${PROTO_CONFIGS[@]}"; do
     package_name="${config%%:*}"
     proto_path="${config##*:}"
     
-    if [[ -f "protobuf/$proto_path" ]]; then
+    if [[ -f "protos/$proto_path" ]]; then
         print_status "Processing $proto_path into package $package_name..."
         
         # Create output directory
@@ -106,12 +99,12 @@ for config in "${PROTO_CONFIGS[@]}"; do
         
         # Generate bindings for this specific proto file
         protoc \
-            --proto_path=protobuf \
+            --proto_path=protos \
             --go_out="$BASE_OUTPUT_DIR/$package_name" \
             --go_opt=paths=source_relative \
             --go-json_out="$BASE_OUTPUT_DIR/$package_name" \
             --go-json_opt=paths=source_relative \
-            "protobuf/$proto_path"
+            "protos/$proto_path"
         
         # Move files from nested directory to package root if they exist
         if [[ -d "$BASE_OUTPUT_DIR/$package_name/${proto_path%/*}" ]]; then
@@ -125,7 +118,7 @@ for config in "${PROTO_CONFIGS[@]}"; do
             print_warning "⚠ Failed to generate bindings for $package_name"
         fi
     else
-        print_warning "Proto file not found: protobuf/$proto_path"
+        print_warning "Proto file not found: protos/$proto_path"
     fi
 done
 
@@ -139,14 +132,7 @@ find "$BASE_OUTPUT_DIR" -name "*.go" | while read -r file; do
 done
 
 print_status "To use these bindings in your Go code, import them as:"
-echo "  import \"github.com/avesta-b/BEP/pkg/proto/<package_name>\""
+echo "  import \"github.com/avesta-b/bzl-exec-log-parser/pkg/proto/<package_name>\""
 echo ""
 echo "Available packages:"
-echo "  - github.com/avesta-b/BEP/pkg/proto/action_cache"
-echo "  - github.com/avesta-b/BEP/pkg/proto/build_event_stream"
-echo "  - github.com/avesta-b/BEP/pkg/proto/command_line"
-echo "  - github.com/avesta-b/BEP/pkg/proto/failure_details"
-echo "  - github.com/avesta-b/BEP/pkg/proto/invocation_policy"
-echo "  - github.com/avesta-b/BEP/pkg/proto/option_filters"
-echo "  - github.com/avesta-b/BEP/pkg/proto/package_load_metrics"
-echo "  - github.com/avesta-b/BEP/pkg/proto/strategy_policy"
+echo "  - github.com/avesta-b/bzl-exec-log-parser/pkg/proto/spawn"
