@@ -29,6 +29,18 @@ struct Args {
     /// Calculate and display remote cache performance metrics
     #[arg(long, default_value_t = true)]
     cache_metrics: bool,
+
+    /// Display a detailed breakdown of action phase timings for slowest actions
+    #[arg(long)]
+    phase_timings: bool,
+
+    /// Display a report on actions with the largest input sizes
+    #[arg(long)]
+    input_analysis: bool,
+
+    /// Display a report on actions that failed or were retried
+    #[arg(long)]
+    retries: bool,
 }
 
 /// Helper to convert prost's Duration to std's Duration
@@ -69,9 +81,18 @@ fn main() -> Result<()> {
     // --- Print Main Report ---
     print_main_report(&spawns, &args);
 
-    // --- Optionally, print cache metrics report ---
+    // --- Optional Reports ---
     if args.cache_metrics {
         print_cache_performance_report(&spawns);
+    }
+    if args.phase_timings {
+        print_phase_timings_report(&spawns, args.top_n);
+    }
+    if args.input_analysis {
+        print_input_analysis_report(&spawns, args.top_n);
+    }
+    if args.retries {
+        print_retries_and_failures_report(&spawns);
     }
 
     Ok(())
@@ -394,6 +415,254 @@ fn print_cache_performance_report(spawns: &[SpawnExec]) {
         println!("Average Download Rate: {:.2} MB/s", download_rate_mbps);
     } else {
         println!("Average Download Rate: N/A (total fetch time is negligible)");
+    }
+    println!();
+}
+
+fn print_phase_timings_report(spawns: &[SpawnExec], top_n: usize) {
+    println!("--- Top {} Slowest Actions (Phase Timings) ---", top_n);
+    println!("Note: This report excludes cache hits as phase timings are most relevant for executed actions.");
+
+    let mut non_cache_hits: Vec<&SpawnExec> = spawns.iter().filter(|s| !s.cache_hit).collect();
+    non_cache_hits.sort_by_key(|s| {
+        s.metrics
+            .as_ref()
+            .and_then(|m| m.total_time.as_ref())
+            .map(to_std_duration)
+            .unwrap_or_default()
+    });
+    non_cache_hits.reverse();
+
+    if non_cache_hits.is_empty() {
+        println!("No executed actions found (all were cache hits).");
+        println!();
+        return;
+    }
+
+    // Calculate column widths based on actual data
+    let actions_to_display = non_cache_hits.iter().take(top_n);
+    
+    let total_width = actions_to_display.clone()
+        .map(|s| {
+            let total = s.metrics.as_ref()
+                .and_then(|m| m.total_time.as_ref())
+                .map(to_std_duration)
+                .unwrap_or_default();
+            format!("{:.2}s", total.as_secs_f64()).len()
+        })
+        .max()
+        .unwrap_or(5)
+        .max(5); // "Total" header
+
+    let queue_width = actions_to_display.clone()
+        .map(|s| {
+            let queue = s.metrics.as_ref()
+                .and_then(|m| m.queue_time.as_ref())
+                .map(to_std_duration)
+                .unwrap_or_default();
+            format!("{:.2}s", queue.as_secs_f64()).len()
+        })
+        .max()
+        .unwrap_or(5)
+        .max(5); // "Queue" header
+
+    let setup_width = actions_to_display.clone()
+        .map(|s| {
+            let setup = s.metrics.as_ref()
+                .and_then(|m| m.setup_time.as_ref())
+                .map(to_std_duration)
+                .unwrap_or_default();
+            format!("{:.2}s", setup.as_secs_f64()).len()
+        })
+        .max()
+        .unwrap_or(5)
+        .max(5); // "Setup" header
+
+    let upload_width = actions_to_display.clone()
+        .map(|s| {
+            let upload = s.metrics.as_ref()
+                .and_then(|m| m.upload_time.as_ref())
+                .map(to_std_duration)
+                .unwrap_or_default();
+            format!("{:.2}s", upload.as_secs_f64()).len()
+        })
+        .max()
+        .unwrap_or(6)
+        .max(6); // "Upload" header
+
+    let execute_width = actions_to_display.clone()
+        .map(|s| {
+            let execution = s.metrics.as_ref()
+                .and_then(|m| m.execution_wall_time.as_ref())
+                .map(to_std_duration)
+                .unwrap_or_default();
+            format!("{:.2}s", execution.as_secs_f64()).len()
+        })
+        .max()
+        .unwrap_or(7)
+        .max(7); // "Execute" header
+
+    let fetch_width = actions_to_display.clone()
+        .map(|s| {
+            let fetch = s.metrics.as_ref()
+                .and_then(|m| m.fetch_time.as_ref())
+                .map(to_std_duration)
+                .unwrap_or_default();
+            format!("{:.2}s", fetch.as_secs_f64()).len()
+        })
+        .max()
+        .unwrap_or(5)
+        .max(5); // "Fetch" header
+
+    // Print header
+    println!(
+        "{:>width1$} | {:>width2$} | {:>width3$} | {:>width4$} | {:>width5$} | {:>width6$} | {}",
+        "Total", "Queue", "Setup", "Upload", "Execute", "Fetch", "Target",
+        width1 = total_width,
+        width2 = queue_width,
+        width3 = setup_width,
+        width4 = upload_width,
+        width5 = execute_width,
+        width6 = fetch_width
+    );
+    
+    // Print separator line
+    let separator_width = total_width + queue_width + setup_width + upload_width + execute_width + fetch_width + 18 + 6; // separators + "Target"
+    println!("{}", "-".repeat(separator_width));
+
+    for spawn in non_cache_hits.iter().take(top_n) {
+        if let Some(metrics) = spawn.metrics.as_ref() {
+            let total = metrics.total_time.as_ref().map(to_std_duration).unwrap_or_default();
+            let queue = metrics.queue_time.as_ref().map(to_std_duration).unwrap_or_default();
+            let setup = metrics.setup_time.as_ref().map(to_std_duration).unwrap_or_default();
+            let upload = metrics.upload_time.as_ref().map(to_std_duration).unwrap_or_default();
+            let execution = metrics.execution_wall_time.as_ref().map(to_std_duration).unwrap_or_default();
+            let fetch = metrics.fetch_time.as_ref().map(to_std_duration).unwrap_or_default();
+
+            // Calculate overhead for display
+            let overhead_pct = if total.as_secs_f64() > 0.0 {
+                (total - execution).as_secs_f64() / total.as_secs_f64() * 100.0
+            } else {
+                0.0
+            };
+
+            println!(
+                "{:>width1$.2}s | {:>width2$.2}s | {:>width3$.2}s | {:>width4$.2}s | {:>width5$.2}s | {:>width6$.2}s | {}",
+                total.as_secs_f64(),
+                queue.as_secs_f64(),
+                setup.as_secs_f64(),
+                upload.as_secs_f64(),
+                execution.as_secs_f64(),
+                fetch.as_secs_f64(),
+                spawn.target_label,
+                width1 = total_width - 1, // -1 for 's' suffix
+                width2 = queue_width - 1,
+                width3 = setup_width - 1,
+                width4 = upload_width - 1,
+                width5 = execute_width - 1,
+                width6 = fetch_width - 1
+            );
+            println!("  └ Overhead: {:.1}%", overhead_pct);
+        }
+    }
+    println!();
+}
+
+fn print_input_analysis_report(spawns: &[SpawnExec], top_n: usize) {
+    println!("--- Top {} Actions by Input Size ---", top_n);
+
+    let mut sorted_by_size = spawns.to_vec();
+    sorted_by_size.sort_by_key(|s| s.metrics.as_ref().map_or(0, |m| m.input_bytes));
+    sorted_by_size.reverse();
+
+    // Filter out actions with no input data
+    let actions_with_inputs: Vec<_> = sorted_by_size
+        .iter()
+        .filter(|s| s.metrics.as_ref().map_or(false, |m| m.input_bytes > 0))
+        .collect();
+
+    if actions_with_inputs.is_empty() {
+        println!("No actions with input size data found in the log.");
+        println!();
+        return;
+    }
+
+    // Calculate column widths based on actual data
+    let actions_to_display = actions_with_inputs.iter().take(top_n);
+    
+    let size_width = actions_to_display.clone()
+        .map(|s| {
+            let size_mb = s.metrics.as_ref().unwrap().input_bytes as f64 / 1_048_576.0;
+            format!("{:.2}MB", size_mb).len()
+        })
+        .max()
+        .unwrap_or(10)
+        .max(10); // "Input Size" header
+
+    let files_width = actions_to_display.clone()
+        .map(|s| s.metrics.as_ref().unwrap().input_files.to_string().len())
+        .max()
+        .unwrap_or(11)
+        .max(11); // "Input Files" header
+
+    // Print header
+    println!(
+        "{:>width1$} | {:>width2$} | {}",
+        "Input Size", "Input Files", "Target",
+        width1 = size_width,
+        width2 = files_width
+    );
+    
+    // Print separator line
+    let separator_width = size_width + files_width + 6 + 6; // separators + "Target"
+    println!("{}", "-".repeat(separator_width));
+
+    for spawn in actions_with_inputs.iter().take(top_n) {
+        if let Some(metrics) = spawn.metrics.as_ref() {
+            println!(
+                "{:>width1$.2}MB | {:>width2$} | {}",
+                metrics.input_bytes as f64 / 1_048_576.0,
+                metrics.input_files,
+                spawn.target_label,
+                width1 = size_width - 2, // -2 for "MB" suffix
+                width2 = files_width
+            );
+        }
+    }
+    println!();
+}
+
+fn print_retries_and_failures_report(spawns: &[SpawnExec]) {
+    println!("--- Actions with Failures or Retries ---");
+
+    let problematic_spawns: Vec<_> = spawns
+        .iter()
+        .filter(|s| {
+            !s.status.is_empty() || s.metrics.as_ref().map_or(false, |m| {
+                m.retry_time.as_ref().map_or(false, |d| d.seconds > 0 || d.nanos > 0)
+            })
+        })
+        .collect();
+
+    if problematic_spawns.is_empty() {
+        println!("No actions with failures or retries found.");
+    } else {
+        for spawn in problematic_spawns {
+            let retry_duration = spawn
+                .metrics
+                .as_ref()
+                .and_then(|m| m.retry_time.as_ref())
+                .map(to_std_duration)
+                .unwrap_or_default();
+            
+            println!("Target: {}", spawn.target_label);
+            if !spawn.status.is_empty() {
+                println!("  └ Status: {} (Exit Code: {})", spawn.status, spawn.exit_code);
+            }
+            if !retry_duration.is_zero() {
+                println!("  └ Time in Retries: {:.3}s", retry_duration.as_secs_f64());
+            }
+        }
     }
     println!();
 }
