@@ -3,6 +3,16 @@ name = "bzl-exec-log-parser"
 version = "0.2.0"
 edition = "2021"
 
+# This section makes src/lib.rs the library root
+[lib]
+name = "bzl_exec_log_parser"
+path = "src/lib.rs"
+
+# This section makes src/main.rs the binary root
+[[bin]]
+name = "bzl-exec-log-analyzer"
+path = "src/main.rs"
+
 [dependencies]
 
 # Protobuf dependencies
@@ -14,6 +24,7 @@ clap = { version = "4.5", features = ["derive"] }
 
 # Error handling
 anyhow = "1.0"
+thiserror = "1.0"
 
 # Compression support for compact format
 zstd = "0.13"
