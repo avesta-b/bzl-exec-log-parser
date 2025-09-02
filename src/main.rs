@@ -15,12 +15,10 @@ use zstd::stream::decode_all;
 
 #[derive(Parser)]
 #[command(name = "bzl-exec-log-analyzer")]
-#[command(about = "Analyzes a Bazel execution log (verbose or compact format) to extract performance metrics.")]
+#[command(about = "Analyzes Bazel execution logs to extract performance metrics")]
 #[command(version)]
 struct Args {
-    /// Path to the Bazel execution log file.
-    /// Verbose: --execution_log_binary_file
-    /// Compact: --experimental_execution_log_compact_file
+    /// Path to the Bazel execution log file (auto-detects format)
     #[arg(help = "Path to the Bazel execution log file")]
     file: PathBuf,
 
@@ -29,7 +27,7 @@ struct Args {
     top_n: usize,
 
     /// Calculate and display remote cache performance metrics
-    #[arg(long)]
+    #[arg(long, default_value_t = true)]
     cache_metrics: bool,
 }
 
@@ -63,8 +61,10 @@ fn main() -> Result<()> {
         println!("Execution log is empty or contains no spawn actions. No metrics to report.");
         return Ok(());
     }
-    println!("Successfully parsed and reconstructed {} spawn entries from the log.", spawns.len());
-
+    println!(
+        "Successfully parsed and reconstructed {} spawn entries from the log.",
+        spawns.len()
+    );
 
     // --- Print Main Report ---
     print_main_report(&spawns, &args);
@@ -175,7 +175,7 @@ fn reconstruct_spawn_exec(
         command_args: spawn.args,
         environment_variables: spawn.env_vars,
         platform: spawn.platform,
-        inputs: vec![], // Not reconstructed as it's not used in analysis
+        inputs: vec![],         // Not reconstructed as it's not used in analysis
         listed_outputs: vec![], // Not reconstructed as it's not used in analysis
         remotable: spawn.remotable,
         cacheable: spawn.cacheable,
@@ -212,9 +212,7 @@ fn print_main_report(spawns: &[SpawnExec], args: &Args) {
 
     let mut mnemonic_metrics: HashMap<String, MnemonicMetrics> = HashMap::new();
     for spawn in spawns {
-        let metrics = mnemonic_metrics
-            .entry(spawn.mnemonic.clone())
-            .or_default();
+        let metrics = mnemonic_metrics.entry(spawn.mnemonic.clone()).or_default();
         metrics.count += 1;
         if spawn.cache_hit {
             metrics.cache_hits += 1;
@@ -230,17 +228,23 @@ fn print_main_report(spawns: &[SpawnExec], args: &Args) {
     println!("Log file: {}\n", args.file.display());
     println!("--- Overall Summary ---");
     println!("Total Actions: {}", total_actions);
-    println!("Cache Hits: {} ({:.2}%)", cache_hits, (cache_hits as f64 / total_actions as f64) * 100.0);
+    println!(
+        "Cache Hits: {} ({:.2}%)",
+        cache_hits,
+        (cache_hits as f64 / total_actions as f64) * 100.0
+    );
     println!();
     println!("--- Top {} Slowest Actions ---", args.top_n);
     println!("{:<10} | {:<25} | {}", "Time", "Mnemonic", "Target");
     println!("---------------------------------------------------------------------------------");
     for spawn in slowest_actions.iter().take(args.top_n) {
-        let duration = spawn.metrics.as_ref()
+        let duration = spawn
+            .metrics
+            .as_ref()
             .and_then(|m| m.total_time.as_ref())
             .map(to_std_duration)
             .unwrap_or_default();
-        
+
         println!(
             "{:<10.3}s | {:<25} | {}",
             duration.as_secs_f64(),
@@ -250,11 +254,81 @@ fn print_main_report(spawns: &[SpawnExec], args: &Args) {
     }
     println!();
     println!("--- Analysis by Mnemonic ---");
-    println!("{:<25} | {:>10} | {:>10} | {:>10} | {:>10}", "Mnemonic", "Count", "Cache Hits", "Total Time", "Avg Time");
-    println!("---------------------------------------------------------------------------------");
+
+    // Calculate column widths based on actual data
     let mut sorted_mnemonics: Vec<_> = mnemonic_metrics.iter().collect();
     sorted_mnemonics.sort_by_key(|(_, metrics)| metrics.total_duration);
     sorted_mnemonics.reverse();
+
+    let mnemonic_width = sorted_mnemonics
+        .iter()
+        .map(|(name, _)| name.len())
+        .max()
+        .unwrap_or(8)
+        .max(8); // "Mnemonic" header
+
+    let count_width = sorted_mnemonics
+        .iter()
+        .map(|(_, metrics)| metrics.count.to_string().len())
+        .max()
+        .unwrap_or(5)
+        .max(5); // "Count" header
+
+    let cache_hits_width = sorted_mnemonics
+        .iter()
+        .map(|(_, metrics)| {
+            format!(
+                "{:.1}%",
+                (metrics.cache_hits as f64 / metrics.count as f64) * 100.0
+            )
+            .len()
+        })
+        .max()
+        .unwrap_or(10)
+        .max(10); // "Cache Hits" header
+
+    let total_time_width = sorted_mnemonics
+        .iter()
+        .map(|(_, metrics)| format!("{:.2}s", metrics.total_duration.as_secs_f64()).len())
+        .max()
+        .unwrap_or(10)
+        .max(10); // "Total Time" header
+
+    let avg_time_width = sorted_mnemonics
+        .iter()
+        .map(|(_, metrics)| {
+            let avg_time = if metrics.count > 0 {
+                metrics.total_duration.as_secs_f64() / metrics.count as f64
+            } else {
+                0.0
+            };
+            format!("{:.3}s", avg_time).len()
+        })
+        .max()
+        .unwrap_or(8)
+        .max(8); // "Avg Time" header
+
+    // Print header
+    println!(
+        "{:<width1$} | {:>width2$} | {:>width3$} | {:>width4$} | {:>width5$}",
+        "Mnemonic",
+        "Count",
+        "Cache Hits",
+        "Total Time",
+        "Avg Time",
+        width1 = mnemonic_width,
+        width2 = count_width,
+        width3 = cache_hits_width,
+        width4 = total_time_width,
+        width5 = avg_time_width
+    );
+
+    // Print separator line
+    let separator_width =
+        mnemonic_width + count_width + cache_hits_width + total_time_width + avg_time_width + 12; // 12 for " | " separators
+    println!("{}", "-".repeat(separator_width));
+
+    // Print data rows
     for (mnemonic, metrics) in sorted_mnemonics {
         let avg_time = if metrics.count > 0 {
             metrics.total_duration.as_secs_f64() / metrics.count as f64
@@ -262,12 +336,17 @@ fn print_main_report(spawns: &[SpawnExec], args: &Args) {
             0.0
         };
         println!(
-            "{:<25} | {:>10} | {:>10.1}% | {:>10.2}s | {:>10.3}s",
+            "{:<width1$} | {:>width2$} | {:>width3$.1}% | {:>width4$.2}s | {:>width5$.3}s",
             mnemonic,
             metrics.count,
             (metrics.cache_hits as f64 / metrics.count as f64) * 100.0,
             metrics.total_duration.as_secs_f64(),
-            avg_time
+            avg_time,
+            width1 = mnemonic_width,
+            width2 = count_width,
+            width3 = cache_hits_width - 1, // -1 for the % symbol
+            width4 = total_time_width - 1, // -1 for the s suffix
+            width5 = avg_time_width - 1    // -1 for the s suffix
         );
     }
     println!();
@@ -282,12 +361,15 @@ fn print_cache_performance_report(spawns: &[SpawnExec]) {
     for spawn in spawns {
         if spawn.runner == "remote cache hit" {
             remote_cache_hit_count += 1;
-            let bytes_for_spawn: i64 = spawn.actual_outputs.iter()
+            let bytes_for_spawn: i64 = spawn
+                .actual_outputs
+                .iter()
                 .filter_map(|file| file.digest.as_ref())
                 .map(|digest| digest.size_bytes)
                 .sum();
             total_bytes_downloaded += bytes_for_spawn;
-            if let Some(fetch_duration) = spawn.metrics.as_ref().and_then(|m| m.fetch_time.as_ref()) {
+            if let Some(fetch_duration) = spawn.metrics.as_ref().and_then(|m| m.fetch_time.as_ref())
+            {
                 total_fetch_time += to_std_duration(fetch_duration);
             }
         }
@@ -303,7 +385,10 @@ fn print_cache_performance_report(spawns: &[SpawnExec]) {
     let total_fetch_seconds = total_fetch_time.as_secs_f64();
     println!("Remote Cache Hits Count: {}", remote_cache_hit_count);
     println!("Total Data Downloaded: {:.2} MB", total_mb_downloaded);
-    println!("Total Time Fetching from Cache: {:.2}s", total_fetch_seconds);
+    println!(
+        "Total Time Fetching from Cache: {:.2}s",
+        total_fetch_seconds
+    );
     if total_fetch_seconds > 0.001 {
         let download_rate_mbps = total_mb_downloaded / total_fetch_seconds;
         println!("Average Download Rate: {:.2} MB/s", download_rate_mbps);
@@ -312,3 +397,4 @@ fn print_cache_performance_report(spawns: &[SpawnExec]) {
     }
     println!();
 }
+
