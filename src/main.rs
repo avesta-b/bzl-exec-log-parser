@@ -4,19 +4,27 @@ use anyhow::Result;
 use clap::Parser;
 use prost::Message;
 use proto::SpawnExec;
+use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 use std::time::Duration;
 
+#[derive(clap::ValueEnum, Clone, Debug)]
+enum LogFormat {
+    Binary,
+    Json,
+}
+
 #[derive(Parser)]
 #[command(name = "bzl-exec-log-analyzer")]
-#[command(about = "Analyzes a Bazel execution log in JSON format to extract performance metrics.")]
+#[command(about = "Analyzes a Bazel execution log to extract performance metrics.")]
 #[command(version)]
 struct Args {
-    /// Path to the Bazel execution log file (in JSON format).
-    /// Can be generated with --execution_log_json_file=<path>
-    #[arg(help = "Path to the Bazel execution log JSON file")]
+    /// Path to the Bazel execution log file.
+    /// Can be generated with --execution_log_json_file=<path> (for JSON)
+    /// or --execution_log_binary_file=<path> (for binary protobuf).
+    #[arg(help = "Path to the Bazel execution log file")]
     file: PathBuf,
 
     /// Number of slowest actions to display in the report
@@ -26,6 +34,10 @@ struct Args {
     /// Calculate and display remote cache performance metrics
     #[arg(long)]
     cache_metrics: bool,
+
+    /// Specify the format of the log file. Tries to auto-detect from extension if not provided.
+    #[arg(short, long, value_enum)]
+    format: Option<LogFormat>,
 }
 
 /// Helper to convert prost's Duration to std's Duration
@@ -46,27 +58,58 @@ struct MnemonicMetrics {
 fn main() -> Result<()> {
     let args = Args::parse();
 
-    // 1. Read and parse the file
+    // 1. Read the file
     let content = fs::read(&args.file)?;
-    let spawns: Vec<SpawnExec> = if args.file.extension() == Some(std::ffi::OsStr::new("json")) {
-        // Try to parse as JSON (would need serde support)
-        return Err(anyhow::anyhow!("JSON format not yet supported in this version. Use protobuf binary format."));
-    } else {
-        // Parse as protobuf binary format
-        let mut decoded_spawns = Vec::new();
-        let mut cursor = content.as_slice();
-        
-        while !cursor.is_empty() {
-            match SpawnExec::decode_length_delimited(&mut cursor) {
-                Ok(spawn) => decoded_spawns.push(spawn),
-                Err(_) => break, // End of valid data
-            }
+
+    // Determine format from flag or file extension
+    let format = args.format.clone().unwrap_or_else(|| {
+        if args.file.extension() == Some(std::ffi::OsStr::new("json")) {
+            LogFormat::Json
+        } else {
+            LogFormat::Binary
         }
-        decoded_spawns
+    });
+
+    // 2. Parse the file based on format
+    let spawns: Vec<SpawnExec> = match format {
+        LogFormat::Json => {
+            // The JSON log is a stream of JSON objects, not a single array.
+            // We use a streaming deserializer to handle this efficiently.
+            let deserializer = serde_json::Deserializer::from_slice(&content);
+            let iterator = deserializer.into_iter::<SpawnExec>();
+            let mut decoded_spawns = Vec::new();
+
+            for item in iterator {
+                match item {
+                    Ok(spawn) => decoded_spawns.push(spawn),
+                    Err(e) => {
+                        // Provide a more helpful error if parsing fails mid-stream
+                        return Err(anyhow::anyhow!(
+                            "Failed to parse JSON object in stream at line {}: {}. Ensure the file is a valid JSON stream.",
+                            e.line(), e
+                        ));
+                    }
+                }
+            }
+            decoded_spawns
+        }
+        LogFormat::Binary => {
+            // Parse as length-delimited protobuf binary format
+            let mut decoded_spawns = Vec::new();
+            let mut cursor = content.as_slice();
+            
+            while !cursor.is_empty() {
+                match SpawnExec::decode_length_delimited(&mut cursor) {
+                    Ok(spawn) => decoded_spawns.push(spawn),
+                    Err(_) => break, // End of valid data
+                }
+            }
+            decoded_spawns
+        }
     };
-    
+
     if spawns.is_empty() {
-        println!("Execution log is empty. No metrics to report.");
+        println!("Execution log is empty or could not be parsed. No metrics to report.");
         return Ok(());
     }
 

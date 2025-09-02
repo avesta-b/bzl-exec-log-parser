@@ -19,6 +19,7 @@ package tools.protos;
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
+option go_package = "github.com/avesta-b/bzl-exec-log-parser/pkg/proto/spawn";
 option java_package = "com.google.devtools.build.lib.exec";
 option java_outer_classname = "Protos";
 
