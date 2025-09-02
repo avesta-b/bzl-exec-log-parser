@@ -1,7 +1,7 @@
 [package]
 name = "bzl-exec-log-parser"
 version = "0.2.0"
-edition = "2021"
+edition = "2024"
 
 # This section makes src/lib.rs the library root
 [lib]
